@@ -149,6 +149,9 @@
 - Marge brute : ~70% (coûts API ~$0.50–3/vidéo)
 
 ### Coûts mensuels estimés (1000 vidéos)
+Deux scénarios selon le modèle AI vidéo choisi — voir section 14 pour le scénario retenu par défaut (Kling 3.0, budget).
+
+**Scénario premium (Veo 3.1 Fast)** :
 | Poste | Coût |
 |-------|------|
 | fal.ai (Veo 3.1 Fast, 500 vidéos × $0.50) | $250 |
@@ -158,12 +161,14 @@
 | Serveur VPS (8 vCPU, render) | $30–60 |
 | **Total** | **~$350/mo** |
 
+**Scénario budget (Kling 3.0 + Qwen3-TTS)** : voir section 14, ~$120/mo pour 1000 vidéos. Écart ×3 dû au choix de modèle vidéo et à la TTS self-host — les deux scénarios sont valides, mais choisir explicitement lequel sert de base au pricing client (section 5A/5B) avant de le communiquer.
+
 ---
 
 ## 6. Roadmap d'implémentation
 
 ### Phase 1 — MVP (2 semaines)
-- [ ] Go orchestrator : file watcher + job queue SQLite
+- [ ] Go orchestrator : API HTTP, rendu synchrone (pas de queue/worker séparé — ajouter SQLite + job queue seulement si la charge concurrente le justifie réellement)
 - [ ] Remotion sidecar : 3 templates (ad 9:16, ad 16:9, product showcase)
 - [ ] Script generation via OpenAI
 - [ ] Render pipeline : Remotion → FFmpeg → S3
@@ -177,7 +182,8 @@
 
 ### Phase 3 — Distribution & Scale (1 semaine)
 - [ ] Multi-plateforme export (TikTok, Meta, YouTube formats)
-- [ ] Direct publishing API (Meta Graph, TikTok Content Posting)
+- [ ] Étape d'approbation humaine (preview + validate/reject) **avant** tout appel de publishing API — cohérent avec la mitigation "human-in-the-loop" de la section 8, sinon un rendu défectueux part directement sur le compte du client
+- [ ] Direct publishing API (Meta Graph, TikTok Content Posting), déclenchée uniquement après validation
 - [ ] A/B testing : générer 5 variations, tracker CTR
 - [ ] Dashboard analytics
 
@@ -216,6 +222,7 @@ video-pipeline/
 | Remotion render lent | Haute | Lambda/GPU spot instances, pre-render cache |
 | Droits musique/images | Moyenne | APIs stock certifiées, vérification automatique |
 | Changement prix API | Haute | Architecture multi-provider, fallback open-source (Wan 2.6) |
+| Conformité légale (voice cloning, disclosure AI, ToS providers tiers) | Haute | Vérifier ToS HeyGen/Creatify avant modèle revente white-label ; disclosure AI obligatoire selon juridiction (EU AI Act, FTC) ; consentement explicite pour cloning vocal/avatar |
 
 ---
 
@@ -232,19 +239,21 @@ video-pipeline/
 
 ---
 
-## 10. Performance benchmarks (real data)
+## 10. Performance benchmarks (real data) `[À VALIDER]`
+
+**Ces chiffres ne sont pas tracés à une source citable dans la section 9 (pas de lien, pas de nom de rapport précis). À vérifier avant de les réutiliser dans un pitch client ou une décision d'investissement.**
 
 ### AI vs human creative
 | Métrique | AI vs Humain | Contexte |
 |----------|-------------|----------|
-| CTR (Meta) | **+12%** | Dataset de 50 000+ variations d'ads |
-| Conversion ($100+ AOV) | **−8%** | Produits chers = confiance humaine nécessaire |
-| Conversion ($500+ AOV) | **−14%** | Écart qui se creuse avec le prix |
-| ROAS parity | **AOV < $100** | Pour produits abordables, l'IA égale l'humain |
-| CPA (Meta Advantage+) | **−32%** | Campagnes optimisées par IA |
-| ROAS (YouTube AI) | **+17%** | Nielsen 2025 |
+| CTR (Meta) | **+12%** | Dataset de 50 000+ variations d'ads — source à identifier |
+| Conversion ($100+ AOV) | **−8%** | Produits chers = confiance humaine nécessaire — source à identifier |
+| Conversion ($500+ AOV) | **−14%** | Écart qui se creuse avec le prix — source à identifier |
+| ROAS parity | **AOV < $100** | Pour produits abordables, l'IA égale l'humain — source à identifier |
+| CPA (Meta Advantage+) | **−32%** | Campagnes optimisées par IA — source à identifier |
+| ROAS (YouTube AI) | **+17%** | "Nielsen 2025" cité sans lien ni titre de rapport |
 
-**Conclusion** : Pour e-commerce < $100 AOV, l'IA est déjà supérieure. Pour luxe/considération, mixer IA (volume/testing) + humain (finishing).
+**Conclusion (à confirmer une fois les sources vérifiées)** : Pour e-commerce < $100 AOV, l'IA serait déjà compétitive. Pour luxe/considération, mixer IA (volume/testing) + humain (finishing) reste la posture prudente tant que les chiffres ci-dessus ne sont pas confirmés.
 
 ### Pourquoi l'IA performe
 - Volume de testing : 10-50x plus de variations qu'une équipe humaine
@@ -271,7 +280,7 @@ video-pipeline/
 | **Self-host** | ❌ | ✅ (Docker, Ubuntu) |
 | **Déploiement** | API cloud | GPU local ou VPS GPU (~$0.50/h) |
 
-**Impact coût pipeline** : ElevenLabs $22/mo → Qwen3-TTS $0 (ou ~$15/mo GPU partagé). Économie de ~$200-500/an.
+**Impact coût pipeline** : ElevenLabs $22/mo → Qwen3-TTS ~$15/mo (GPU partagé) à ~$0.50/h (VPS GPU dédié) — pas $0, le coût se déplace vers l'infra GPU. Économie nette de ~$100-300/an selon usage, moins spectaculaire qu'un "self-host gratuit" mais reste favorable. Couverture langues plus faible (10 vs 29) : à vérifier si le marché cible en a besoin.
 
 ---
 
@@ -309,7 +318,7 @@ video-pipeline/
 | **JSON2Video** | API JSON→vidéo | $29-99/mo | Développeurs |
 | **Shotstack** | API video editing | $49-199/mo | Développeurs |
 
-**Notre angle différenciateur** : Pipeline hybride (template + AI gen + avatar) avec self-host possible (Qwen3-TTS + Remotion open-source) = coût marginal quasi nul.
+**Notre angle différenciateur** : Pipeline hybride (template + AI gen + avatar) avec self-host possible (Qwen3-TTS + Remotion open-source) = coût marginal bas. À nuancer : le coût seul n'est pas un moat contre Creatify/HeyGen/Arcads, qui ont déjà distribution, UX et base clients installées. Le coût marginal bas protège la marge, il ne remplace pas une stratégie d'acquisition — à documenter séparément (canal, ICP, GTM).
 
 ---
 
