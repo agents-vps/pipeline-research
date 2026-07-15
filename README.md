@@ -229,3 +229,110 @@ video-pipeline/
 - JSON2Video, Shotstack API documentation
 - n8n community workflows
 - buildmvpfast.com — AI video API pricing comparison
+
+---
+
+## 10. Performance benchmarks (real data)
+
+### AI vs human creative
+| Métrique | AI vs Humain | Contexte |
+|----------|-------------|----------|
+| CTR (Meta) | **+12%** | Dataset de 50 000+ variations d'ads |
+| Conversion ($100+ AOV) | **−8%** | Produits chers = confiance humaine nécessaire |
+| Conversion ($500+ AOV) | **−14%** | Écart qui se creuse avec le prix |
+| ROAS parity | **AOV < $100** | Pour produits abordables, l'IA égale l'humain |
+| CPA (Meta Advantage+) | **−32%** | Campagnes optimisées par IA |
+| ROAS (YouTube AI) | **+17%** | Nielsen 2025 |
+
+**Conclusion** : Pour e-commerce < $100 AOV, l'IA est déjà supérieure. Pour luxe/considération, mixer IA (volume/testing) + humain (finishing).
+
+### Pourquoi l'IA performe
+- Volume de testing : 10-50x plus de variations qu'une équipe humaine
+- Itération rapide : un test qui prenait 2 semaines → 2 heures
+- Algorithmes de plateforme (Meta, TikTok) qui récompensent la diversité créative
+
+---
+
+## 11. Voix & Audio : Qwen3-TTS (game changer)
+
+**Jusqu'ici** : ElevenLabs était le standard (qualité > prix).  
+**Maintenant** : Qwen3-TTS change la donne.
+
+| Caractéristique | ElevenLabs | Qwen3-TTS |
+|-----------------|------------|-----------|
+| **Licence** | Propriétaire | Apache 2.0 (open-source) |
+| **Coût** | $0.30/1k chars | $0 (self-host, coût GPU uniquement) |
+| **Voice cloning** | ✅ Premium | ✅ 3 secondes d'audio |
+| **Voice design** | ❌ | ✅ (prompt texte → voix) |
+| **Langues** | 29 | 10 (EN, FR, ES, DE, JP, KR, ZH, RU, PT, IT) |
+| **Modèle** | 1.7B params | 1.7B params (4.54 GB) |
+| **VRAM min** | N/A | RTX 3090 (24 GB) |
+| **Streaming** | ✅ | ✅ ultra-low latency |
+| **Self-host** | ❌ | ✅ (Docker, Ubuntu) |
+| **Déploiement** | API cloud | GPU local ou VPS GPU (~$0.50/h) |
+
+**Impact coût pipeline** : ElevenLabs $22/mo → Qwen3-TTS $0 (ou ~$15/mo GPU partagé). Économie de ~$200-500/an.
+
+---
+
+## 12. Remotion SSR : options de déploiement server-side
+
+| Option | Vitesse | Coût | Scale | Setup |
+|--------|---------|------|-------|-------|
+| **Remotion Lambda** | Rapide (distribué) | Pay-per-render | Auto-scale | 1 commande |
+| **Vercel Sandbox** | Rapide | Inclus Vercel | Limité | Le + simple |
+| **Cloud Run** | Bon | Pay-per-second | Auto-scale | Dockerfile |
+| **Serveur custom (VPS)** | Lent (1 machine) | Fixe ~$30-60/mo | Manuel | Complexe |
+| **GitHub Actions** | Très lent | Gratuit (limité) | 6h/mois gratuit | Simple |
+
+**Recommandé** : Remotion Lambda pour la prod, VPS pour le dev/test.
+
+### Nouvelle alternative : Revideo
+- Fork open-source de Motion Canvas
+- Ajoute rendering API + templates + server-side
+- Package `@revideo/core` (~3K npm downloads/semaine)
+- Plus léger que Remotion si on n'a pas besoin de React
+
+---
+
+## 13. Paysage concurrentiel (video ad SaaS)
+
+| Outil | Positionnement | Prix | Cible |
+|-------|---------------|------|-------|
+| **Creatify** | URL→vidéo, avatars UGC | $39-99/mo | E-commerce DTC |
+| **HeyGen** | Avatar UGC pro | $24-120/mo | Marketing B2B/B2C |
+| **Synthesia** | Talking head corporate | $22-67/mo | Formation, corpo |
+| **Arcads** | UGC actors IA | $110+/mo | E-commerce premium |
+| **Rocketium** | Creative automation retail | Sur devis | Grande distribution |
+| **Hunch** | DPA/catalog ads Meta | Sur devis | Mid-market e-commerce |
+| **Marpipe** | Feed-to-creative testing | Sur devis | E-commerce performance |
+| **JSON2Video** | API JSON→vidéo | $29-99/mo | Développeurs |
+| **Shotstack** | API video editing | $49-199/mo | Développeurs |
+
+**Notre angle différenciateur** : Pipeline hybride (template + AI gen + avatar) avec self-host possible (Qwen3-TTS + Remotion open-source) = coût marginal quasi nul.
+
+---
+
+## 14. Recommandation mise à jour
+
+### Stack finale recommandée
+
+| Couche | Choix | Raison |
+|--------|-------|--------|
+| **Template rendering** | Remotion (open-source) | Gratuit, React, mature |
+| **AI vidéo** | fal.ai (multi-model) | Pay-per-use, tous les modèles |
+| **Voix/Audio** | **Qwen3-TTS** (self-host) | Gratuit Apache 2.0, qualité pro |
+| **Script ads** | Claude/GPT-4o API | Création de scripts marketing |
+| **Post-process** | FFmpeg (system call) | Gratuit, tout faire |
+| **Stock media** | Pexels/Pixabay (gratuit) | B-roll + musique |
+| **Renderer cloud** | Remotion Lambda | Scale auto, pay-per-render |
+| **Orchestrateur** | Go (binaire unique) | Stack maîtrisée |
+
+### Coût marginal par vidéo (estimé)
+- fal.ai (5s Kling 3.0) : $0.10
+- Qwen3-TTS : $0 (self-host)
+- Script LLM : $0.002
+- Remotion Lambda render : ~$0.02
+- **Total : ~$0.12/vidéo** 🎯
+
+À ce prix, on peut générer **1000 vidéos pour ~$120** et les revendre $5-50/vidéo.
